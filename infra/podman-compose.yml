@@ -1,0 +1,51 @@
+# Infrastructure conteneurisee de la formation "IA Generative pour Developpeurs".
+# Usage : podman compose up -d   (arret : podman compose down, sans -v pour garder les donnees)
+#
+# Par defaut, le LLM et les embeddings tournent via l'Ollama de l'HOTE
+# (llama3.2:1b et nomic-embed-text). Depuis un conteneur, l'hote est joignable
+# sur macOS via host.containers.internal. Le code (common/llm.py) cible
+# localhost quand il tourne hors conteneur, ce qui est le cas nominal en TP.
+
+services:
+  pgvector:
+    image: docker.io/pgvector/pgvector:pg16
+    container_name: formation-pgvector
+    environment:
+      POSTGRES_DB: formation
+      POSTGRES_USER: formation
+      POSTGRES_PASSWORD: formation   # identifiants simples : DEV uniquement
+    ports:
+      - "5432:5432"
+    volumes:
+      # Script d'init : cree l'extension vector et la table documents.
+      # Monte en lecture seule ; joue au premier demarrage seulement.
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro,z
+      # Volume nomme pour la persistance des donnees PostgreSQL.
+      - pgvector_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U formation -d formation"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  # ---------------------------------------------------------------------------
+  # Service Ollama OPTIONNEL : a decommenter uniquement si l'apprenant n'a pas
+  # Ollama installe en local. Dans ce cas, pointer OLLAMA_HOST vers ce service
+  # (http://localhost:11434 reste valable grace au mapping de port ci-dessous)
+  # et penser a telecharger les modeles dans le conteneur :
+  #   podman exec -it formation-ollama ollama pull llama3.2:1b
+  #   podman exec -it formation-ollama ollama pull nomic-embed-text
+  # ---------------------------------------------------------------------------
+  # ollama:
+  #   image: docker.io/ollama/ollama:latest
+  #   container_name: formation-ollama
+  #   ports:
+  #     - "11434:11434"
+  #   volumes:
+  #     - ollama_data:/root/.ollama
+  #   restart: unless-stopped
+
+volumes:
+  pgvector_data:
+  # ollama_data:
