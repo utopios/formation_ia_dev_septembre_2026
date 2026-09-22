@@ -1,0 +1,11 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "type": "command",
+        "command": "./.github/hooks/scripts/anti-donnees-client.sh",
+        "timeout": 5
+      }
+    ]
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "type": "command",
+        "command": "./.github/hooks/scripts/garde-perimetre.sh",
+        "timeout": 5
+      }
+    ]
+  }
+}
