@@ -8,6 +8,8 @@ Atlassian, qui sera distribue cet apres-midi pour la Demo 6b.
 jira/tickets.md          les 14 tickets du projet NOVA
 confluence/*.md          les 4 pages de l'espace « NOVA — Specifications »
 gitlab/apercu.md         ce que le connecteur GitLab voit, et ou le trouver
+outils/atlassian.md      les 98 outils du serveur Atlassian, lecture / ecriture
+outils/gitlab.md         les 65 outils du serveur GitLab, lecture / ecriture
 ```
 
 Le `.vscode/mcp.json` a etudier est celui de votre depot `atelier-copilot` :

@@ -48,6 +48,8 @@ exercices/donnees/exercice-02/
   jira/tickets.md          les 14 tickets du projet NOVA, tels que le connecteur les expose
   confluence/*.md          les 4 pages de l'espace « NOVA — Spécifications »
   gitlab/apercu.md         ce que le connecteur GitLab voit — le code, vous l'avez déjà
+  outils/atlassian.md      les 98 outils que le serveur Atlassian expose, lecture / écriture
+  outils/gitlab.md         les 65 outils que le serveur GitLab expose, lecture / écriture
 ```
 
 C'est **exactement** ce qui est dans Jira et Confluence : le dossier est
@@ -87,13 +89,13 @@ doit pouvoir citer un ticket ou une page.
 
 | Rubrique | Ce qu'on y note |
 |---|---|
-| **Ce qui devient atteignable** | Pas « Jira », mais quoi dans Jira : quels projets, quels champs, les pièces jointes ? les commentaires ? |
+| **Ce qui devient atteignable** | Deux questions, pas une. *Quelles données* : pas « Jira », mais quoi dans Jira — projets, champs, pièces jointes, commentaires. *Quelles actions* : ouvrez `outils/atlassian.md` — lire, mais aussi créer, modifier, supprimer, restreindre. Comptez. |
 | **Ce que le filtre restreint** | Ce que `NOVA` écarte réellement — et ce qu'il n'écarte pas |
 | **Sensibilité** | Le degré, et la raison. Pas une intuition : une justification |
 | **Qui y a déjà accès** | Le connecteur n'accorde rien de plus que les droits du compte utilisé. Est-ce rassurant ? |
 | **Ce qui ne doit jamais partir** | La liste, avec pour chaque entrée : pourquoi |
 
-### Trois questions qui guident la fiche
+### Quatre questions qui guident la fiche
 
 **1. Le connecteur ajoute-t-il des droits ?**
 
@@ -115,7 +117,19 @@ arbitrages de comité tarifaire.
 Tout cela part au modèle quand quelqu'un demande « quelles sont les règles de
 remise ? ». **Est-ce un problème ? Dans quel cas oui, dans quel cas non ?**
 
-**3. Le filtre par projet suffit-il ?**
+**3. Les outils d'écriture sont-ils réellement bloqués ?**
+
+Le serveur Atlassian expose 98 outils. Dans `outils/atlassian.md`, comptez
+ceux d'écriture — `jira_delete_issue`, `confluence_delete_page`,
+`confluence_set_page_restrictions`… — puis relisez le `mcp.json` :
+`READ_ONLY_MODE: "false"`.
+
+Comparez avec le serveur GitLab : `GITLAB_READ_ONLY_MODE: "true"`. Ses outils
+d'écriture sont **exposés mais bloqués**. Deux serveurs, deux réglages, et une
+seule ligne les sépare. **Qui a décidé de cette ligne, et pourquoi n'est-elle
+pas la même des deux côtés ?**
+
+**4. Le filtre par projet suffit-il ?**
 
 `JIRA_PROJECTS_FILTER: NOVA` limite aux tickets du projet NOVA. Dans
 `jira/tickets.md`, cherchez le ticket intitulé **« Reprise des remises
@@ -233,13 +247,4 @@ C'est la version « organisation » de ce que vous avez fait hier avec
 `copilot-instructions.md` : ce qui est décidé une fois et partagé vaut mieux
 que ce que chacun retape de mémoire.
 
-## Pour aller plus loin
 
-Refaites l'étape 1 sur **votre propre SI**. Trois questions suffisent à
-démarrer :
-
-- Quels connecteurs sont activés aujourd'hui, et par qui ?
-- Quel compte les fait tourner — un compte nominatif ou un compte de service ?
-- Si ce compte était compromis, quelle serait l'étendue de la fuite ?
-
-La troisième question est celle qui fait bouger les lignes en réunion.
