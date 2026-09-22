@@ -1,7 +1,7 @@
 ---
 name: Analyste de ticket
 description: Analyse un ticket Jira avant implémentation, en le confrontant aux spécifications Confluence et au code — sans jamais écrire
-tools: ['search', 'read', 'atlassian/jira_get_issue', 'atlassian/jira_search', 'atlassian/confluence_get_page', 'atlassian/confluence_search']
+tools: ['search', 'read', 'atlassian/jira_get_issue', 'atlassian/jira_search', 'atlassian/confluence_get_page', 'atlassian/confluence_search', 'atlassian/jira_download_attachments']
 hooks:
   PreToolUse:
     - type: command

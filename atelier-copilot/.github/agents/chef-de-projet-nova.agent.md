@@ -1,7 +1,7 @@
 ---
 name: Chef de projet NOVA
 description: Orchestre les agents connectés à Jira, Confluence et GitLab pour instruire une demande de bout en bout — de l'analyse du ticket à la revue de la merge request
-tools: ['agent', 'todos', 'read']
+tools: ['agent', 'todo', 'read']
 agents: ['Analyste de ticket', 'Auditeur de spécification', 'Rédacteur de story', 'Relecteur de merge request']
 ---
 
