@@ -7,6 +7,7 @@ handoffs:
     agent: agent
     prompt: Corrige les écarts entre le code et la spécification relevés ci-dessus, en respectant les règles citées.
     send: false
+
 ---
 
 # Rôle
