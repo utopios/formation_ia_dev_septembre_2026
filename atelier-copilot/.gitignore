@@ -5,3 +5,9 @@ target/
 .settings/
 .classpath
 .project
+
+# Journal d audit produit par le hook trace-audit
+.github/hooks/audit.log
+
+# Journal des decisions du hook politique-lecture
+.github/hooks/politique.log

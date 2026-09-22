@@ -1,0 +1,11 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "type": "command",
+        "command": "./.github/hooks/scripts/trace-audit.sh",
+        "timeout": 3
+      }
+    ]
+  }
+}

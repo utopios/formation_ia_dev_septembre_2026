@@ -1,0 +1,11 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "type": "command",
+        "command": "./.github/hooks/scripts/anti-fuite.sh",
+        "timeout": 5
+      }
+    ]
+  }
+}
