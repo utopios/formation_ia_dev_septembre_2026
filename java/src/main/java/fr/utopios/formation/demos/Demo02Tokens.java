@@ -1,3 +1,42 @@
+package fr.utopios.formation.demos;
+
+import fr.utopios.formation.commun.Llm;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+
+/**
+ * Demo 2 — variante "mesure de l'economie de tokens" (Module 2, slide
+ * « Mesurer l'economie, plutot que la supposer »).
+ *
+ * <p>Objectif pedagogique : substituer une MESURE a une affirmation. Les
+ * slides annoncent que la conversion locale en Markdown est sobre en tokens ;
+ * cette classe le chiffre sur les documents reels de la Demo 2c.</p>
+ *
+ * <p>{@code Llm.compterTokens} mesure un texte SEUL, sans le gabarit de
+ * conversation : c'est la mesure honnete pour comparer deux formulations d'une
+ * meme source.</p>
+ *
+ * <p><b>Un binaire n'a pas de nombre de tokens.</b> Un {@code .docx} est une
+ * archive ZIP : il n'existe pas de tokenisation d'un fichier binaire tant que
+ * quelque chose ne l'a pas transforme en texte. Ce que mesure cette classe,
+ * c'est donc le cout du Markdown produit, compare au POIDS du binaire —
+ * et c'est exactement le point a faire passer : quand on glisse un
+ * {@code .docx} dans un chat, un outil le convertit sans dire comment, ni ce
+ * qu'il en a retenu.</p>
+ *
+ * <p>Prerequis : les fichiers de la Demo 2c doivent avoir ete convertis.
+ * Si les {@code .md} manquent :</p>
+ * <pre>
+ * source ~/.venv-formation/bin/activate
+ * cd data/demo-02c
+ * markitdown specification-remises.docx -o specification-remises.md
+ * </pre>
+ *
+ * <p>Lancement :
+ * {@code mvn -q compile exec:java -Dexec.mainClass="fr.utopios.formation.demos.Demo02Tokens"}</p>
+ */
 public final class Demo02Tokens {
 
     private static final Path DOSSIER = Path.of("data/demo-02c");

@@ -23,7 +23,10 @@
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
-            <version>2.19.0</version>
+            <!-- 2.22.2 : version exigee par copilot-sdk-java (Demo 15).
+                 Maven applique « nearest wins » : si le projet declarait
+                 2.19.0, c'est elle qui l'emporterait sur celle du SDK. -->
+            <version>2.22.2</version>
         </dependency>
 
         <!-- LangChain4j : abstraction de haut niveau (utilisee pour le RAG) -->
@@ -38,6 +41,12 @@
             <version>1.0.0-beta5</version>
         </dependency>
 
+        <dependency>
+            <groupId>com.github</groupId>
+            <artifactId>copilot-sdk-java</artifactId>
+            <version>1.0.15-preview.0</version>
+        </dependency>
+
         <!-- Pilote JDBC PostgreSQL : demo 7 (pgvector). Le type "vector" se
              manipule en texte via un cast ::vector, donc aucun pilote
              specialise n'est necessaire. -->
@@ -45,6 +54,17 @@
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
             <version>42.7.4</version>
+        </dependency>
+
+        <!-- SDK GitHub Copilot : Demo 15, piloter un agent outille depuis
+             Java et suivre sa boucle. Toutes les versions publiees sont en
+             -preview : l'API peut bouger, la fiche de demo le dit. Le SDK
+             n'embarque PAS le CLI 'copilot', qui s'installe a part
+             (npm install -g @github/copilot). -->
+        <dependency>
+            <groupId>com.github</groupId>
+            <artifactId>copilot-sdk-java</artifactId>
+            <version>1.0.15-preview.0</version>
         </dependency>
     </dependencies>
 
@@ -56,6 +76,12 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.13.0</version>
+                <configuration>
+                    <!-- Conserve les noms de parametres dans le bytecode : LangChain4j
+                         (Demo 3c) les lit pour nommer les arguments des outils
+                         (« chemin » plutot que « arg0 »). -->
+                    <parameters>true</parameters>
+                </configuration>
             </plugin>
             <!-- Permet de lancer une classe main par une seule commande :
                  mvn -q compile exec:java -Dexec.mainClass="fr.utopios.formation.commun.SmokeTest" -->

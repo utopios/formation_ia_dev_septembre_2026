@@ -167,6 +167,13 @@ public final class DemoHarnessCopilot {
                     trace.reponseFinale = fin.getData().content().trim();
                 }
             } catch (Exception e) {
+                if (String.valueOf(e.getMessage()).contains("No GitHub OAuth token")) {
+                    System.err.println();
+                    System.err.println("Le CLI Copilot n'est connecte a aucun compte GitHub. Une fois, dans un terminal :");
+                    System.err.println("  " + cli + "      # puis taper /login et suivre le code sur github.com/login/device");
+                    System.err.println("ou exporter GH_TOKEN=<jeton GitHub avec acces Copilot>, puis relancer.");
+                    return;
+                }
                 if (!trace.interrompu) {
                     throw e;
                 }

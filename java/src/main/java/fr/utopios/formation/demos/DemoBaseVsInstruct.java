@@ -41,7 +41,7 @@ public final class DemoBaseVsInstruct {
             "Donne exactement 3 risques de securite d'un agent IA qui execute des "
                     + "commandes shell, en 3 lignes numerotees, sans introduction ni conclusion.";
 
-    private Demo14BaseVsInstruct() {
+    private DemoBaseVsInstruct() {
     }
 
     private static String env(String cle, String defaut) {
