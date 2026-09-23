@@ -40,6 +40,13 @@
             <artifactId>langchain4j-ollama</artifactId>
             <version>1.0.0-beta5</version>
         </dependency>
+        <!-- Magasin pgvector de LangChain4j : RAG 02b, variante 3 — le meme code
+             que le magasin en memoire, sur la base de la formation. -->
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j-pgvector</artifactId>
+            <version>1.0.0-beta5</version>
+        </dependency>
 
         <!-- Pilote JDBC PostgreSQL : demo 7 (pgvector). Le type "vector" se
              manipule en texte via un cast ::vector, donc aucun pilote
