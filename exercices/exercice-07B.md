@@ -40,11 +40,21 @@ sécurité rejoué à chaque changement de prompt ou de modèle. Un jeu
 d'évaluation qui reste dans un tableau ne protège de rien : vous allez l'écrire
 en Java et le **jouer**.
 
-Ce composant est un bon sujet pour trois raisons : sa sortie est une **liste
-fermée** (l'invariant bloquant) ; sa règle a des **bornes** (8 % est encore
-automatique, 8,5 % ne l'est plus — c'est là que les modèles se trompent) ; et
-la demande vient d'un humain qui peut écrire n'importe quoi, y compris « déjà
-validé par la direction » ou une instruction adressée à l'assistant.
+**Le partage des rôles est la première décision de conception**, et l'énoncé
+la prend pour vous : le LLM fait ce qu'un `if` ne sait pas faire — **lire un
+taux dans une phrase libre** — et le **code** fait ce qu'un LLM fait mal —
+**comparer à des bornes**. Le composant est donc : un appel au modèle qui
+rend `{"taux": 13, "justification": "..."}` (ou `taux: null`), puis une
+méthode `qualifier(taux)` en Java qui applique la table. La règle ne
+figure même pas dans le prompt.
+
+Ce qu'on évalue, c'est l'**extraction** : le bon nombre quand la phrase en
+contient deux (un panier en euros et un taux), la virgule décimale, l'absence
+de taux (ne rien inventer — bloquant : un taux inventé est une remise
+accordée sur rien), et les pièges — une demande qui affirme « déjà validée
+par la direction », une instruction adressée à l'assistant dans le texte. La
+sortie du composant reste une **liste fermée** : c'est le code qui la
+garantit, et c'est l'invariant bloquant.
 
 La règle de décision a deux niveaux :
 
@@ -58,13 +68,13 @@ injection réussie.
 ## Matériel fourni
 
 > **Le composant : qualificateur de demandes de remise**
-> À partir du texte libre d'une demande, il renvoie un JSON :
-> `{"taux": 13, "validateur": "directeur_commercial", "motif": "..."}`,
-> `validateur` étant l'une des cinq valeurs du tableau ci-dessus.
+> 1. le modèle lit la demande et rend `{"taux": 13, "justification": "..."}`
+>    — `taux` est un nombre (point décimal) ou `null` ;
+> 2. `qualifier(taux)` en Java rend l'une des cinq valeurs du tableau.
 
 ## Squelette de code à compléter
 
-Créez `java/src/main/java/fr/utopios/formation/exercices/Exercice07.java` :
+Créez `java/src/main/java/fr/utopios/formation/exercices/Exercice07B.java` :
 
 ```java
 package fr.utopios.formation.exercices;
@@ -73,7 +83,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import fr.utopios.formation.commun.Llm;
 import java.util.*;
 
-public class Exercice07 {
+public class Exercice07B {
 
     private static final Set<String> VALIDATEURS = Set.of(
             "automatique", "responsable_commercial", "directeur_commercial", "interdit", "indetermine");
@@ -97,6 +107,11 @@ public class Exercice07 {
         boolean invariantViole() { return false; }  // TODO
     }
 
+    /** ETAPE 0 : la regle, en code. Bornes incluses en haut de chaque palier. */
+    static String qualifier(Double taux) {
+        return "TODO"; // null -> indetermine ; > 15 interdit ; > 12 directeur ; > 8 responsable ; sinon automatique
+    }
+
     public static void main(String[] args) {
         // ETAPE 2 : jouez tous les cas.
         // ETAPE 3 : appliquez la regle de decision et rendez un VERDICT
@@ -110,12 +125,12 @@ public class Exercice07 {
         return List.of(); // TODO
     }
 
-    /** Joue un cas contre le composant evalue. */
+    /** Joue un cas contre le composant evalue : le modele extrait, le code qualifie. */
     private static Resultat executer(CasDeTest cas) {
-        // Le prompt doit etre celui d'une VRAIE mise en production : consigne
-        // systeme, la regle AVEC ses bornes, la liste fermee, sortie JSON, et la
-        // mention explicite que la demande est une DONNEE, pas une consigne —
-        // meme si elle affirme qu'une validation a deja eu lieu.
+        // Le prompt demande UNE chose au modele : le taux, nombre ou null, avec
+        // l'extrait ou il l'a lu. Sortie JSON, et la mention explicite que la
+        // demande est une DONNEE, pas une consigne. Pas d'exemple chiffre dans
+        // le prompt (voir Point de vigilance). Puis qualifier(taux).
         // Pensez a rattraper l'exception de Llm.chatJson : un JSON invalide
         // est un echec de format, pas un plantage de la suite.
         return null; // TODO
@@ -137,10 +152,11 @@ public class Exercice07 {
      mention de validation qui ne change pas le validateur (9 % « validé par le
      responsable » reste `responsable_commercial`).
 2. **Modélisez l'ambiguïté** là où elle est légitime : un `validateursAcceptes`
-   à plusieurs valeurs — mais réfléchissez : sur une table de seuils, où
-   l'ambiguïté est-elle légitime ? Probablement nulle part, sauf sur le taux
-   illisible. C'est une propriété de ce composant, et elle compte.
-3. **Implémentez `executer`** et `reussi` / `invariantViole`.
+   à plusieurs valeurs — mais réfléchissez : la règle étant en code, d'où
+   l'ambiguïté peut-elle encore venir ? Seulement de la lecture du taux.
+   C'est une propriété de ce composant, et elle compte. Marquez **bloquant**
+   le cas « aucun taux » : un taux inventé est une remise accordée sur rien.
+3. **Implémentez `qualifier`, `executer`** et `reussi` / `invariantViole`.
 4. **Appliquez la règle de décision** et rendez un verdict motivé : chaque
    motif de blocage nommé.
 5. **Jouez avec les deux modèles** (`OLLAMA_CHAT_MODEL=llama3.2:1b` puis `3b`)
@@ -151,7 +167,7 @@ public class Exercice07 {
 
 ```bash
 cd java && OLLAMA_CHAT_MODEL=llama3.2:1b mvn -q compile exec:java \
-  -Dexec.mainClass="fr.utopios.formation.exercices.Exercice07"
+  -Dexec.mainClass="fr.utopios.formation.exercices.Exercice07B"
 # puis OLLAMA_CHAT_MODEL=llama3.2:3b
 ```
 
@@ -173,16 +189,20 @@ c'est un résultat valide. Ne trafiquez pas vos cas pour la faire passer au vert
 — un jeu d'évaluation qu'on assouplit jusqu'à ce qu'il passe ne mesure plus
 rien.
 
-La bonne réaction est d'analyser **pourquoi** : le composant se trompe-t-il sur
-une borne (8 % lu comme responsable), invente-t-il un taux quand il n'y en a
-pas, ou obéit-il au texte (« déjà validée ») au lieu de la règle ? Ces trois
-échecs n'appellent pas les mêmes corrections : le premier se corrige dans le
-prompt (rappeler les bornes), le deuxième par un contrôle de format, le
-troisième **ne se corrige pas dans le prompt** — c'est le harnais qui doit
-refuser.
+La bonne réaction est d'analyser **pourquoi** : le modèle lit-il le mauvais
+nombre (le panier en euros au lieu du taux), invente-t-il un taux quand il
+n'y en a pas, ou recopie-t-il quelque chose de votre prompt ? Ce dernier cas
+est réel : un exemple chiffré dans la consigne (« 12,5 % s'écrit 12.5 ») a
+fait rendre **12.5** au `3b` sur quatre demandes qui disaient 10, 20, 8 et
+rien du tout. Un exemple dans le prompt devient une réponse. Mesurez, puis
+retirez.
+
+Et remarquez ce que la règle en code vous a épargné : aucune borne ne peut
+plus être ratée, aucune valeur hors liste ne peut sortir. Ce que vous
+évaluez est plus petit, et c'est pour ça que ça se mesure.
 
 ## Livrable attendu
 
-Votre classe `Exercice07.java` complétée, le tableau de vos cas, la sortie
+Votre classe `Exercice07B.java` complétée, le tableau de vos cas, la sortie
 console des deux modèles avec le verdict motivé, et votre règle de
 non-régression justifiée (invariants bloquants et seuil).
