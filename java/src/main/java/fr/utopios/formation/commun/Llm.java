@@ -61,12 +61,23 @@ public final class Llm {
     public static final int DIMENSION_EMBEDDING = 768;
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
+
+    /**
+     * Delai d'etablissement de connexion. Porte a 60 s le 21/09/2026 : sur le
+     * serveur de formation, Ollama est partage par 11 comptes et sert jusqu'a
+     * six requetes en parallele. Sous charge, l'acceptation de connexion peut
+     * depasser dix secondes — le client echouait alors sur un « request timed
+     * out » trompeur, alors que le service repondait normalement quelques
+     * secondes plus tard. Le delai de REPONSE, lui, reste fixe par requete
+     * (5 minutes, voir post()).
+     */
     private static final HttpClient HTTP = HttpClient.newBuilder()
-            .connectTimeout(Duration.ofSeconds(10))
+            .connectTimeout(Duration.ofSeconds(60))
             .build();
 
     private static int derniersTokensPrompt = -1;
     private static int derniersTokensReponse = -1;
+    private static int derniersTokensCaches = -1;
     private static long dernieresDureeMs = -1;
 
     private Llm() {
@@ -143,10 +154,27 @@ public final class Llm {
      * @return le texte de la reponse
      */
     public static String chat(List<Message> messages, double temperature) {
+        return chat(messages, temperature, -1);
+    }
+
+    /**
+     * Comme {@link #chat(List, double)}, avec un plafond de tokens en sortie.
+     *
+     * <p>{@code maxTokens} devient l'option Ollama {@code num_predict} : le
+     * serveur arrete la generation au plafond, quoi que le prompt demande.
+     * C'est la borne cote HARNESS contre la consommation abusive (OWASP
+     * LLM10) : un prompt qui reclame « 10 000 lignes » ne coute jamais plus
+     * que le plafond. {@code -1} = pas de plafond (comportement par defaut).</p>
+     */
+    public static String chat(List<Message> messages, double temperature, int maxTokens) {
         ObjectNode corps = MAPPER.createObjectNode();
         corps.put("model", modeleChat());
         corps.put("stream", false);
-        corps.putObject("options").put("temperature", temperature);
+        ObjectNode options = corps.putObject("options");
+        options.put("temperature", temperature);
+        if (maxTokens > 0) {
+            options.put("num_predict", maxTokens);
+        }
         remplirMessages(corps.putArray("messages"), messages);
 
         long debut = System.currentTimeMillis();
@@ -155,8 +183,10 @@ public final class Llm {
 
         derniersTokensPrompt = reponse.path("prompt_eval_count").asInt(-1);
         derniersTokensReponse = reponse.path("eval_count").asInt(-1);
-        System.err.printf("[llm] modele=%s tokens_prompt=%d tokens_reponse=%d duree=%d ms%n",
-                modeleChat(), derniersTokensPrompt, derniersTokensReponse, dernieresDureeMs);
+        derniersTokensCaches = reponse.path("prompt_eval_cached_count").asInt(-1);
+        System.err.printf("[llm] modele=%s tokens_prompt=%d (dont %d en cache) tokens_reponse=%d duree=%d ms%n",
+                modeleChat(), derniersTokensPrompt, derniersTokensCaches,
+                derniersTokensReponse, dernieresDureeMs);
 
         return reponse.path("message").path("content").asText();
     }
@@ -285,6 +315,21 @@ public final class Llm {
         return derniersTokensReponse;
     }
 
+    /**
+     * Tokens du prompt servis par le CACHE DE PREFIXE lors du dernier appel
+     * (-1 si l'information n'est pas fournie par le serveur).
+     *
+     * <p>Ollama renvoie ce compteur dans {@code prompt_eval_cached_count} : ce
+     * sont les tokens de tete que le moteur n'a pas eu a retraiter, parce
+     * qu'ils etaient identiques a ceux de l'appel precedent. Le cache porte
+     * toujours sur un PREFIXE exact : des que la premiere difference apparait,
+     * tout ce qui suit est recalcule. C'est la grandeur que le Module 9
+     * appelle « la partie stable du prompt ».</p>
+     */
+    public static int derniersTokensCaches() {
+        return derniersTokensCaches;
+    }
+
     /** Duree du dernier appel de chat, en millisecondes (-1 si aucun). */
     public static long dernieresDureeMs() {
         return dernieresDureeMs;
@@ -309,7 +354,11 @@ public final class Llm {
         corps.put("prompt", texte);
         corps.put("raw", true);
         corps.put("stream", false);
-        corps.putObject("options").put("num_predict", 0);
+        // num_predict = 1, pas 0 : sur le serveur de formation (Ollama 0.12), 0 est
+        // lu comme « sans limite » et, en mode raw (sans gabarit de chat donc sans
+        // jeton d'arret), le modele generait jusqu'a l'expiration de la requete.
+        // Un seul token suffit : c'est prompt_eval_count qu'on lit, pas la sortie.
+        corps.putObject("options").put("num_predict", 1);
         return post("/api/generate", corps).path("prompt_eval_count").asInt(-1);
     }
 
